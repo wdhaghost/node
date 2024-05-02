@@ -9,7 +9,10 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "type": "module",
   "dependencies": {
+    "@fastify/mongodb": "^8.0.0",
+    "@fastify/mysql": "^4.3.0",
     "fastify": "^4.26.2"
   }
 }
