@@ -1,11 +1,10 @@
 import Fastify from 'fastify'
+import recipesRoutes from './src/routes/recipeRoutes.js'
 const fastify = Fastify({
   logger: true
 })
 
-fastify.get('/', function (request, reply) {
-    reply.send({ hello: 'world' })
-  })
+fastify.register(recipesRoutes)
 
   fastify.listen({ port: 3000 }, function (err, address) {
     if (err) {
