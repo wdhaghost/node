@@ -1,10 +1,14 @@
 import fastifyPlugin from "fastify-plugin";
-import fastifyMongo from "@fastify/mongodb";
-
+import mongoose from "mongoose";
 
 async function dbConnector(fastify,options){
-fastify.register(fastifyMongo,{
-    url: process.env.MONGO_DB_URL
-})
+await mongoose.connect(process.env.MONGO_URL_DB,{ serverSelectionTimeoutMS: 30000 })
+.then(() => {
+    console.log('MongoDB connected successfully');
+  }).catch(err => {
+    console.error('MongoDB connection error:', err);
+  });
+  
+ 
 }
 export default fastifyPlugin(dbConnector)
