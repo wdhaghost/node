@@ -3,5 +3,6 @@ import { getRecipeByIngredient, getRecipeByName,index} from '../controllers/reci
     fastify.get('/',index)
     fastify.get('/recipes/:name',getRecipeByName)
     fastify.get('/recipes/ingredient/:ingredient',getRecipeByIngredient)
+
 }
 
