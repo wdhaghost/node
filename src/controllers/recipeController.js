@@ -27,6 +27,21 @@ export  async function getRecipeByIngredient (req,rep){
   }
 
 }
+export async function getRecipeById(req, res) {
+  try {
+    const { id } = req.params; // Extract the ID from request parameters
+    const recipe = await Recipe.findById(id); // Use findById() to get the recipe
+
+    if (!recipe) {
+      return res.status(404).send({ message: 'Recipe not found' }); // Send 404 if no recipe is found
+    }
+
+    res.send(recipe); // Send the recipe to the client
+  } catch (error) {
+    console.error('Error fetching recipe by ID:', error);
+    res.status(500).send({ error: 'An error occurred while fetching the recipe' }); // Handle errors and send a response
+  }
+}
 
 export async function createRecipe (recipe) {
    try {
