@@ -1,9 +1,49 @@
 import puppeteer from "puppeteer";
-import { createRecipe } from "./src/controllers/recipeController.js";
+import { mongoRecipe as Recipe } from "./src/models/mongoRecipe.js";
+import dotenv from 'dotenv';
 import * as fs from "fs"
-import { error } from "console";
+import { v4 as uuidv4 } from "uuid";
+import mysql from 'mysql2/promise';
+import mongoose from "mongoose";
+dotenv.config();
+mongoose.connect(process.env.MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true})
+  .then(() => console.log('Connected to MongoDB successfully'))
+  .catch(err => console.error('Failed to connect to MongoDB:', err));
+
+const connection = await mysql.createConnection({
+    host: process.env.SQL_DB_HOST,
+    port: process.env.DB_PORT || 3306,
+    user: process.env.SQL_DB_USER,
+    password: process.env.SQL_DB_PW,
+    database: process.env.SQL_DB_NAME,
+  });
+  
+async function insertRecipe(data) {
+    const id = uuidv4();  // Generate a UUID
+
+    const mongoRecipe = new Recipe({_id: id, ...data});
+    await mongoRecipe.save();
+  
+    const { name, steps,ingredients } = data;
+    await connection.execute('INSERT INTO recipes (id, name, steps) VALUES (?, ?, ?)', [id, name, steps]);
+    for (const ingredient of ingredients) {
+        let ingredientId;
+
+        const [rows] = await connection.execute('SELECT id FROM ingredients WHERE name = ?', [ingredient]);
+        if (rows.length > 0) {
+            ingredientId = rows[0].id;  
+        } else {
+
+            const result = await connection.execute('INSERT INTO ingredients (name) VALUES (?)', [ingredient]);
+            ingredientId = result[0].insertId;  // Get the auto-generated ID from the insert operation
+        }
+
+        // Link the recipe and ingredient by their IDs
+        await connection.execute('INSERT INTO recipe_ingredient (recipe_id, ingredient_id) VALUES (?, ?)', [id, ingredientId]);
+    }
 
 
+  }
 async function scrapeAllCategories(){
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
@@ -30,6 +70,7 @@ async function fetchRecipe(href, browser){
     });
     
     await page.close();
+    await insertRecipe(recipe)
     return recipe
     
 }
