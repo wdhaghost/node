@@ -1,10 +1,15 @@
 import Fastify from 'fastify'
 import recipesRoutes from './src/routes/recipeRoutes.js'
-import dbConnector from './src/db/dbConnector.js'
+import mongoDBConnector from './src/db/mongoDBConnector.js'
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import fastifyCors from '@fastify/cors';
 import dotenv from 'dotenv';
+import sqlDBConnector from './src/db/sqlDBConnector.js';
+import MongoRecipeRepository from './src/repositories/mongoRecipeRepositories.js';
+import recipeService from './src/services/recipeService.js';
+import SQLRecipeRepository from './src/repositories/SQLRecipeRepository.js';
+
 dotenv.config();
 const fastify = Fastify({
   logger: true
@@ -25,11 +30,13 @@ const swaggerUiOptions = {
   routePrefix: "/docs",
   exposeRoute: true,
 };
-
+const recipeRepository = process.env.DB_TYPE === 'mongo' ? new MongoRecipeRepository() : new SQLRecipeRepository(sqlDBConnector);
+const service = new recipeService(recipeRepository);
 fastify.register(fastifySwagger, swaggerOptions);
 fastify.register(fastifySwaggerUi, swaggerUiOptions);
-fastify.register(dbConnector)
-
+fastify.register(mongoDBConnector)
+fastify.decorate('sqlDbconnector', sqlDBConnector)
+fastify.decorate('recipeService', service);
 fastify.register(recipesRoutes)
 fastify.register(fastifyCors,{
   origin: true
