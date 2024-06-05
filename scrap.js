@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import mysql from 'mysql2/promise';
 import mongoose from "mongoose";
 dotenv.config();
+
 mongoose.connect(process.env.MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true})
   .then(() => console.log('Connected to MongoDB successfully'))
   .catch(err => console.error('Failed to connect to MongoDB:', err));
@@ -18,6 +19,28 @@ const connection = await mysql.createConnection({
     database: process.env.SQL_DB_NAME,
   });
   
+  async function clearMysql() {
+      try {
+        await connection.execute('DELETE FROM recipe_ingredient');
+        await connection.execute('DELETE FROM recipes');
+        await connection.execute('DELETE FROM ingredients');
+        console.log('Mysql collections have been cleared');
+    } catch (error) {
+        console.error('Failed to clear Mysql collections:', error);
+    }
+}
+async function clearMongoDB() {
+    try {
+        // Assuming you have models like Recipe and Ingredient
+        await Recipe.deleteMany({});
+        console.log('MongoDB collections have been cleared');
+    } catch (error) {
+        console.error('Failed to clear MongoDB collections:', error);
+    }
+}
+
+
+
 async function insertRecipe(data) {
     const id = uuidv4();  // Generate a UUID
 
@@ -96,6 +119,8 @@ async function fetchAllRecipes(href){
 // Example usage
 async function main() {
     try{
+        await clearMongoDB();
+        await clearMysql();
         const categories = await scrapeAllCategories();
         const recipes=await fetchAllRecipes("https://www.allrecipes.com/recipes/343/bread/quick-bread/fruit-bread/banana-bread/");
 
