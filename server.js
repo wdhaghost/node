@@ -9,6 +9,7 @@ import sqlDBConnector from './src/db/sqlDBConnector.js';
 import MongoRecipeRepository from './src/repositories/mongoRecipeRepositories.js';
 import recipeService from './src/services/recipeService.js';
 import SQLRecipeRepository from './src/repositories/SQLRecipeRepository.js';
+import { mongoRecipe as Recipe} from './src/models/mongoRecipe.js';
 
 dotenv.config();
 const fastify = Fastify({
@@ -39,8 +40,30 @@ fastify.decorate('sqlDbconnector', sqlDBConnector)
 fastify.decorate('recipeService', service);
 fastify.register(recipesRoutes)
 fastify.register(fastifyCors,{
-  origin: true
+  
+  origin: '*',
 })
+async function clearMysql() {
+  try {
+    await sqlDBConnector.execute('DELETE FROM recipe_ingredient');
+    await sqlDBConnector.execute('DELETE FROM recipes');
+    await sqlDBConnector.execute('DELETE FROM ingredients');
+    console.log('Mysql collections have been cleared');
+} catch (error) {
+    console.error('Failed to clear Mysql collections:', error);
+}
+}
+async function clearMongoDB() {
+try {
+
+    await Recipe.deleteMany({});
+    console.log('MongoDB collections have been cleared');
+} catch (error) {
+    console.error('Failed to clear MongoDB collections:', error);
+}
+}
+clearMongoDB()
+clearMysql()
   fastify.listen({ port: 3000 }, function (err, address) {
     if (err) {
       fastify.log.error(err)

@@ -31,7 +31,7 @@ const connection = await mysql.createConnection({
 }
 async function clearMongoDB() {
     try {
-        // Assuming you have models like Recipe and Ingredient
+
         await Recipe.deleteMany({});
         console.log('MongoDB collections have been cleared');
     } catch (error) {
@@ -119,10 +119,12 @@ async function fetchAllRecipes(href){
 // Example usage
 async function main() {
     try{
+       const categories= ['https://www.allrecipes.com/recipes/343/bread/quick-bread/fruit-bread/banana-bread/','https://www.allrecipes.com/recipes/276/desserts/cakes/']
         await clearMongoDB();
         await clearMysql();
-        const categories = await scrapeAllCategories();
-        const recipes=await fetchAllRecipes("https://www.allrecipes.com/recipes/343/bread/quick-bread/fruit-bread/banana-bread/");
+        // const categories = await scrapeAllCategories();
+        await fetchAllRecipes(categories[0]);
+        await fetchAllRecipes(categories[1]);
 
         fs.writeFile("data.json",JSON.stringify(recipes),(error)=>{
             if (error) {
